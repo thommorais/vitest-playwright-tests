@@ -60,9 +60,6 @@ importers:
       '@total-typescript/ts-reset':
         specifier: ^0.6.1
         version: 0.6.1
-      '@types/node':
-        specifier: ^22.15.24
-        version: 22.15.24
       '@types/react':
         specifier: ^19.1.2
         version: 19.1.6
