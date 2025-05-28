@@ -1,6 +1,6 @@
-import { act, renderHook } from '@testing-library/react'
 import { faker } from '@faker-js/faker'
-import { describe, expect, it, beforeEach } from 'vitest'
+import { act, renderHook } from '@testing-library/react'
+import { beforeEach, describe, expect, it } from 'vitest'
 import { useSearch } from './use-search'
 
 type TestUser = {
@@ -46,9 +46,9 @@ describe('useSearch', () => {
 		expect(result.current.searchTerm).toBe('John')
 		expect(result.current.searchResult.length).toBeGreaterThanOrEqual(0)
 		// Verify all results contain 'John' in the name
-		result.current.searchResult.forEach(user => {
+		for (const user of result.current.searchResult) {
 			expect(user.name.toLowerCase()).toContain('john')
-		})
+		}
 	})
 
 	it('should filter data by multiple search fields', () => {
@@ -61,12 +61,12 @@ describe('useSearch', () => {
 
 		expect(result.current.searchResult.length).toBeGreaterThan(0)
 		// Verify results contain the search term in one of the fields
-		result.current.searchResult.forEach(user => {
+		for (const user of result.current.searchResult) {
 			const matchesName = user.name.toLowerCase().includes('.com')
 			const matchesEmail = user.email.toLowerCase().includes('.com')
 			const matchesDepartment = user.department.toLowerCase().includes('.com')
 			expect(matchesName || matchesEmail || matchesDepartment).toBe(true)
-		})
+		}
 	})
 
 	it('should be case insensitive', () => {
@@ -77,7 +77,7 @@ describe('useSearch', () => {
 		})
 
 		const adminResults = result.current.searchResult
-		
+
 		act(() => {
 			result.current.handleSearch('admin')
 		})
@@ -85,9 +85,9 @@ describe('useSearch', () => {
 		const lowerAdminResults = result.current.searchResult
 
 		expect(adminResults).toEqual(lowerAdminResults)
-		adminResults.forEach(user => {
+		for (const user of adminResults) {
 			expect(user.role.toLowerCase()).toContain('admin')
-		})
+		}
 	})
 
 	it('should trim whitespace from search term', () => {
@@ -98,9 +98,9 @@ describe('useSearch', () => {
 		})
 
 		expect(result.current.searchResult.length).toBeGreaterThanOrEqual(0)
-		result.current.searchResult.forEach(user => {
+		for (const user of result.current.searchResult) {
 			expect(user.role.toLowerCase()).toContain('user')
-		})
+		}
 	})
 
 	it('should return empty array when no matches found', () => {
@@ -165,9 +165,9 @@ describe('useSearch', () => {
 			result.current.handleSearch('books')
 		})
 
-		result.current.searchResult.forEach(user => {
+		for (const user of result.current.searchResult) {
 			expect(user.department.toLowerCase()).toContain('books')
-		})
+		}
 	})
 
 	it('should search across email domains', () => {
@@ -179,9 +179,9 @@ describe('useSearch', () => {
 
 		// All emails should contain '@'
 		expect(result.current.searchResult).toHaveLength(50)
-		result.current.searchResult.forEach(user => {
+		for (const user of result.current.searchResult) {
 			expect(user.email).toContain('@')
-		})
+		}
 	})
 
 	it('should update search results when data changes', () => {

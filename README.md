@@ -56,6 +56,7 @@ pnpm format       # Format code
 ## Testing
 
 The application includes comprehensive tests using:
+
 - Vitest for unit testing
 - Testing Library for component testing
 - Zod schemas for type validation
