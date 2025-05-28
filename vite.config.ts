@@ -7,6 +7,7 @@ import tsconfigPaths from 'vite-tsconfig-paths'
 export default defineConfig({
 	plugins: [react(), tsconfigPaths(), tailwindcss()],
 	test: {
+		include: ['**/*.test.ts'],
 		environment: 'jsdom',
 		setupFiles: ['./src/test/setup.ts'],
 		globals: true,
