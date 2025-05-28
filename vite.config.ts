@@ -13,14 +13,7 @@ export default defineConfig({
 		globals: true,
 		coverage: {
 			reporter: ['text', 'json', 'html', 'lcov'],
-			exclude: [
-				'node_modules/',
-				'src/test/',
-				'**/*.d.ts',
-				'**/index.ts',
-				'**/main.tsx',
-				'vite.config.ts',
-			],
+			exclude: ['node_modules/', 'src/test/', '**/*.d.ts', '**/index.ts', '**/main.tsx', 'vite.config.ts'],
 		},
 	},
 })
