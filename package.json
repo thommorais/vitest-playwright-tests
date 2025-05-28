@@ -1,0 +1,34 @@
+{
+	"name": "test",
+	"private": true,
+	"version": "0.0.0",
+	"type": "module",
+	"scripts": {
+		"dev": "vite",
+		"build": "tsc -b && vite build",
+		"lint": "biome lint ./src",
+		"format": "biome format ./src ",
+		"preview": "vite preview"
+	},
+	"dependencies": {
+		"@emotion/react": "^11.14.0",
+		"@emotion/styled": "^11.14.0",
+		"@mui/material": "^7.1.0",
+		"@tailwindcss/vite": "^4.1.8",
+		"@total-typescript/ts-reset": "^0.6.1",
+		"react": "^19.1.0",
+		"react-dom": "^19.1.0",
+		"swr": "^2.3.3",
+		"tailwindcss": "^4.1.8"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^1.9.4",
+		"@types/react": "^19.1.2",
+		"@types/react-dom": "^19.1.2",
+		"@vitejs/plugin-react": "^4.4.1",
+		"globals": "^16.0.0",
+		"typescript": "~5.8.3",
+		"vite": "^6.3.5",
+		"vite-tsconfig-paths": "^5.1.4"
+	}
+}
