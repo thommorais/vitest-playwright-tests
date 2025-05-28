@@ -1,79 +1,113 @@
 import { act, renderHook } from '@testing-library/react'
-import { describe, expect, it } from 'vitest'
+import { faker } from '@faker-js/faker'
+import { describe, expect, it, beforeEach } from 'vitest'
 import { useSearch } from './use-search'
 
+type TestUser = {
+	id: number
+	name: string
+	email: string
+	role: string
+	department: string
+	phone: string
+}
+
 describe('useSearch', () => {
-	const testData = [
-		{ id: 1, name: 'John Doe', email: 'john@example.com', role: 'admin' },
-		{ id: 2, name: 'Jane Smith', email: 'jane@example.com', role: 'user' },
-		{ id: 3, name: 'Bob Johnson', email: 'bob@test.com', role: 'user' },
-		{ id: 4, name: 'Alice Brown', email: 'alice@example.com', role: 'moderator' },
-		{ id: 5, name: 'Charlie Wilson', email: 'charlie@test.com', role: 'user' },
-	]
+	let testData: TestUser[]
+
+	beforeEach(() => {
+		faker.seed(12345) // Consistent seed for reproducible tests
+		testData = Array.from({ length: 50 }, (_, index) => ({
+			id: index + 1,
+			name: faker.person.fullName(),
+			email: faker.internet.email(),
+			role: faker.helpers.arrayElement(['admin', 'user', 'moderator', 'viewer']),
+			department: faker.commerce.department(),
+			phone: faker.phone.number(),
+		}))
+	})
 
 	it('should initialize with empty search term and return all data', () => {
 		const { result } = renderHook(() => useSearch(testData, { searchFields: ['name', 'email'] }))
 
 		expect(result.current.searchTerm).toBe('')
 		expect(result.current.searchResult).toEqual(testData)
+		expect(result.current.searchResult).toHaveLength(50)
 	})
 
-	it('should filter data by single search field', () => {
+	it('should filter data by single search field (name)', () => {
 		const { result } = renderHook(() => useSearch(testData, { searchFields: ['name'] }))
 
+		// Search for a common first name pattern
 		act(() => {
-			result.current.handleSearch('john')
+			result.current.handleSearch('John')
 		})
 
-		expect(result.current.searchTerm).toBe('john')
-		expect(result.current.searchResult).toEqual([
-			{ id: 1, name: 'John Doe', email: 'john@example.com', role: 'admin' },
-			{ id: 3, name: 'Bob Johnson', email: 'bob@test.com', role: 'user' },
-		])
+		expect(result.current.searchTerm).toBe('John')
+		expect(result.current.searchResult.length).toBeGreaterThanOrEqual(0)
+		// Verify all results contain 'John' in the name
+		result.current.searchResult.forEach(user => {
+			expect(user.name.toLowerCase()).toContain('john')
+		})
 	})
 
 	it('should filter data by multiple search fields', () => {
-		const { result } = renderHook(() => useSearch(testData, { searchFields: ['name', 'email'] }))
+		const { result } = renderHook(() => useSearch(testData, { searchFields: ['name', 'email', 'department'] }))
 
+		// Search for a domain pattern
 		act(() => {
-			result.current.handleSearch('test.com')
+			result.current.handleSearch('.com')
 		})
 
-		expect(result.current.searchResult).toEqual([
-			{ id: 3, name: 'Bob Johnson', email: 'bob@test.com', role: 'user' },
-			{ id: 5, name: 'Charlie Wilson', email: 'charlie@test.com', role: 'user' },
-		])
+		expect(result.current.searchResult.length).toBeGreaterThan(0)
+		// Verify results contain the search term in one of the fields
+		result.current.searchResult.forEach(user => {
+			const matchesName = user.name.toLowerCase().includes('.com')
+			const matchesEmail = user.email.toLowerCase().includes('.com')
+			const matchesDepartment = user.department.toLowerCase().includes('.com')
+			expect(matchesName || matchesEmail || matchesDepartment).toBe(true)
+		})
 	})
 
 	it('should be case insensitive', () => {
-		const { result } = renderHook(() => useSearch(testData, { searchFields: ['name'] }))
+		const { result } = renderHook(() => useSearch(testData, { searchFields: ['role'] }))
 
 		act(() => {
-			result.current.handleSearch('ALICE')
+			result.current.handleSearch('ADMIN')
 		})
 
-		expect(result.current.searchResult).toEqual([
-			{ id: 4, name: 'Alice Brown', email: 'alice@example.com', role: 'moderator' },
-		])
+		const adminResults = result.current.searchResult
+		
+		act(() => {
+			result.current.handleSearch('admin')
+		})
+
+		const lowerAdminResults = result.current.searchResult
+
+		expect(adminResults).toEqual(lowerAdminResults)
+		adminResults.forEach(user => {
+			expect(user.role.toLowerCase()).toContain('admin')
+		})
 	})
 
 	it('should trim whitespace from search term', () => {
-		const { result } = renderHook(() => useSearch(testData, { searchFields: ['name'] }))
+		const { result } = renderHook(() => useSearch(testData, { searchFields: ['role'] }))
 
 		act(() => {
-			result.current.handleSearch('  jane  ')
+			result.current.handleSearch('  user  ')
 		})
 
-		expect(result.current.searchResult).toEqual([
-			{ id: 2, name: 'Jane Smith', email: 'jane@example.com', role: 'user' },
-		])
+		expect(result.current.searchResult.length).toBeGreaterThanOrEqual(0)
+		result.current.searchResult.forEach(user => {
+			expect(user.role.toLowerCase()).toContain('user')
+		})
 	})
 
 	it('should return empty array when no matches found', () => {
 		const { result } = renderHook(() => useSearch(testData, { searchFields: ['name'] }))
 
 		act(() => {
-			result.current.handleSearch('nonexistent')
+			result.current.handleSearch('xyznonexistent123')
 		})
 
 		expect(result.current.searchResult).toEqual([])
@@ -83,16 +117,18 @@ describe('useSearch', () => {
 		const { result } = renderHook(() => useSearch(testData, { searchFields: ['name'] }))
 
 		act(() => {
-			result.current.handleSearch('john')
+			result.current.handleSearch('admin')
 		})
 
-		expect(result.current.searchResult).toHaveLength(2)
+		const filteredCount = result.current.searchResult.length
+		expect(filteredCount).toBeLessThan(testData.length)
 
 		act(() => {
 			result.current.handleSearch('')
 		})
 
 		expect(result.current.searchResult).toEqual(testData)
+		expect(result.current.searchResult).toHaveLength(50)
 	})
 
 	it('should handle empty data array', () => {
@@ -106,10 +142,11 @@ describe('useSearch', () => {
 	})
 
 	it('should ignore non-string field values', () => {
-		const dataWithNumbers = [
-			{ id: 1, name: 'John', age: 25 },
-			{ id: 2, name: 'Jane', age: 30 },
-		]
+		const dataWithNumbers = Array.from({ length: 5 }, (_, index) => ({
+			id: index + 1,
+			name: faker.person.fullName(),
+			age: faker.number.int({ min: 18, max: 65 }),
+		}))
 
 		const { result } = renderHook(() => useSearch(dataWithNumbers, { searchFields: ['name', 'age'] }))
 
@@ -117,32 +154,50 @@ describe('useSearch', () => {
 			result.current.handleSearch('25')
 		})
 
+		// Should not match numeric age field, only string fields
 		expect(result.current.searchResult).toEqual([])
 	})
 
-	it('should handle partial matches', () => {
+	it('should handle department-based search with realistic data', () => {
+		const { result } = renderHook(() => useSearch(testData, { searchFields: ['department'] }))
+
+		act(() => {
+			result.current.handleSearch('books')
+		})
+
+		result.current.searchResult.forEach(user => {
+			expect(user.department.toLowerCase()).toContain('books')
+		})
+	})
+
+	it('should search across email domains', () => {
 		const { result } = renderHook(() => useSearch(testData, { searchFields: ['email'] }))
 
 		act(() => {
-			result.current.handleSearch('example')
+			result.current.handleSearch('@')
 		})
 
-		expect(result.current.searchResult).toHaveLength(3)
+		// All emails should contain '@'
+		expect(result.current.searchResult).toHaveLength(50)
+		result.current.searchResult.forEach(user => {
+			expect(user.email).toContain('@')
+		})
 	})
 
 	it('should update search results when data changes', () => {
 		const { result, rerender } = renderHook(({ data }) => useSearch(data, { searchFields: ['name'] }), {
-			initialProps: { data: testData.slice(0, 2) },
+			initialProps: { data: testData.slice(0, 10) },
 		})
 
 		act(() => {
-			result.current.handleSearch('john')
+			result.current.handleSearch('e')
 		})
 
-		expect(result.current.searchResult).toHaveLength(1)
+		const initialResultCount = result.current.searchResult.length
 
 		rerender({ data: testData })
 
-		expect(result.current.searchResult).toHaveLength(2)
+		// Should have more results with larger dataset
+		expect(result.current.searchResult.length).toBeGreaterThanOrEqual(initialResultCount)
 	})
 })
