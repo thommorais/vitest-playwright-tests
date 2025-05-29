@@ -3,6 +3,6 @@
 -P ubuntu-20.04=node:20
 --container-architecture linux/amd64
 --bind
--s CODECOV_TOKEN=
+-s CODECOV_TOKEN=c45106da-f8fd-4a33-bb16-42fbdabeb258
 --container-daemon-socket /var/run/docker.sock
 
