@@ -34,15 +34,13 @@ const useSearch = <T extends SearchableItem>(data: T[], options: UseSearchOption
 		})
 	}, [data, options.searchFields])
 
-	const deferredSearchTerm = useDeferredValue(searchTerm)
-
 	const searchResult = useMemo(() => {
 		if (!data.length) return []
 		if (!fuzzySearch) return data
 
-		const term = deferredSearchTerm.toLowerCase().trim()
+		const term = searchTerm.toLowerCase().trim()
 		return term ? fuzzySearch.search(term) : data
-	}, [fuzzySearch, data, deferredSearchTerm])
+	}, [fuzzySearch, data, searchTerm])
 
 	const deferredSearchResult = useDeferredValue(searchResult)
 
