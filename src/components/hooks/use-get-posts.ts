@@ -18,9 +18,9 @@ const usePosts = (): SwrResult<Post[]> => {
 			return result.data
 		},
 		{
+			keepPreviousData: true,
 			revalidateOnReconnect: true,
 			revalidateOnFocus: true,
-			refreshInterval: 5000,
 		},
 	)
 

@@ -4,11 +4,37 @@ import TableCell from '@mui/material/TableCell'
 import TableContainer from '@mui/material/TableContainer'
 import TableHead from '@mui/material/TableHead'
 import TableRow from '@mui/material/TableRow'
-import { PostContext } from '_/components/ui/posts-context'
-import { useContext } from 'react'
+import { useError, useIsLoading, usePosts } from '_/stores/posts-store'
+import { memo } from 'react'
+
+const TableBodyWrapper = memo(() => {
+	const posts = usePosts()
+
+	return (
+		<TableBody>
+			{posts.map(post => (
+				<TableRow
+					key={post.id}
+					className='hover:bg-zinc-950/2.5 dark:hover:bg-white/2.5 dark:focus-within:bg-white/2.5'
+				>
+					<TableCell className='relative hidden border-zinc-950/5 border-b px-4 py-4 text-center font-mono text-zinc-950 tabular-nums sm:first:pl-1 md:table-cell dark:border-white/5 dark:text-zinc-400'>
+						{`${post.userId}`.padStart(2, '0')}
+					</TableCell>
+					<TableCell className='relative text-balance border-zinc-950/5 px-4 py-4 font-medium text-zinc-950 capitalize max-md:block md:border-b dark:text-zinc-100/75 md:dark:border-white/5'>
+						{post.title}
+					</TableCell>
+					<TableCell className='relative text-pretty border-zinc-950/5 border-b px-4 py-4 text-zinc-950 max-md:block sm:last:pr-1 dark:border-white/5 dark:text-zinc-400'>
+						{post.body}
+					</TableCell>
+				</TableRow>
+			))}
+		</TableBody>
+	)
+})
 
 const TableWrapper = () => {
-	const { posts, isLoading, error } = useContext(PostContext)
+	const isLoading = useIsLoading()
+	const error = useError()
 
 	if (isLoading) {
 		return (
@@ -45,25 +71,7 @@ const TableWrapper = () => {
 						</TableCell>
 					</TableRow>
 				</TableHead>
-
-				<TableBody>
-					{posts.map(post => (
-						<TableRow
-							key={post.id}
-							className='hover:bg-zinc-950/2.5 dark:hover:bg-white/2.5 dark:focus-within:bg-white/2.5'
-						>
-							<TableCell className='relative hidden border-zinc-950/5 border-b px-4 py-4 text-center font-mono text-zinc-950 tabular-nums sm:first:pl-1 md:table-cell dark:border-white/5 dark:text-zinc-400'>
-								{`${post.userId}`.padStart(2, '0')}
-							</TableCell>
-							<TableCell className='relative text-balance border-zinc-950/5 px-4 py-4 font-medium text-zinc-950 capitalize max-md:block md:border-b dark:text-zinc-100/75 md:dark:border-white/5'>
-								{post.title}
-							</TableCell>
-							<TableCell className='relative text-pretty border-zinc-950/5 border-b px-4 py-4 text-zinc-950 max-md:block sm:last:pr-1 dark:border-white/5 dark:text-zinc-400'>
-								{post.body}
-							</TableCell>
-						</TableRow>
-					))}
-				</TableBody>
+				<TableBodyWrapper />
 			</Table>
 		</TableContainer>
 	)
