@@ -3,108 +3,115 @@ import { act, renderHook } from '@testing-library/react'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { useSearch } from './use-search'
 
-type TestUser = {
+type BlogPost = {
 	id: number
-	name: string
-	email: string
-	role: string
-	department: string
-	phone: string
+	title: string
+	author: string
+	content: string
 }
 
 describe('useSearch', () => {
-	let testData: TestUser[]
+	let testData: BlogPost[]
 
 	beforeEach(() => {
 		faker.seed(12345) // Consistent seed for reproducible tests
-		testData = Array.from({ length: 50 }, (_, index) => ({
-			id: index + 1,
-			name: faker.person.fullName(),
-			email: faker.internet.email(),
-			role: faker.helpers.arrayElement(['admin', 'user', 'moderator', 'viewer']),
-			department: faker.commerce.department(),
-			phone: faker.phone.number(),
-		}))
+		testData = Array.from({ length: 50 }, (_, index) => {
+			if (index === 0) {
+				// Ensure first post has the specific title we want to test
+				return {
+					id: 1,
+					title: 'Tom Bombabil adventures in the Old Forest',
+					author: 'J.R.R. Tolkien',
+					content: 'A tale of Tom Bombadil and his mysterious powers in the depths of the Old Forest.',
+				}
+			}
+			return {
+				id: index + 1,
+				title: faker.lorem.sentence(),
+				author: faker.person.fullName(),
+				content: faker.lorem.paragraphs(2),
+			}
+		})
 	})
 
 	it('should initialize with empty search term and return all data', () => {
-		const { result } = renderHook(() => useSearch(testData, { searchFields: ['name', 'email'] }))
+		const { result } = renderHook(() => useSearch(testData, { searchFields: ['title', 'author'] }))
 
 		expect(result.current.searchTerm).toBe('')
 		expect(result.current.searchResult).toEqual(testData)
 		expect(result.current.searchResult).toHaveLength(50)
 	})
 
-	it('should filter data by single search field (name)', () => {
-		const { result } = renderHook(() => useSearch(testData, { searchFields: ['name'] }))
+	it('should filter data by single search field (title)', () => {
+		const { result } = renderHook(() => useSearch(testData, { searchFields: ['title'] }))
 
-		// Search for a common first name pattern
+		// Search for the specific Tom Bombabil post
 		act(() => {
-			result.current.handleSearch('John')
+			result.current.handleSearch('Tom')
 		})
 
-		expect(result.current.searchTerm).toBe('John')
+		expect(result.current.searchTerm).toBe('Tom')
 		expect(result.current.searchResult.length).toBeGreaterThan(0) // Ensure there are matches
-		// Verify all results contain 'John' in the name
-		for (const user of result.current.searchResult) {
-			expect(user.name.toLowerCase()).toContain('john')
+		// Verify all results contain 'Tom' in the title
+		for (const post of result.current.searchResult) {
+			expect(post.title.toLowerCase()).toContain('tom')
 		}
 	})
 
 	it('should filter data by multiple search fields', () => {
-		const { result } = renderHook(() => useSearch(testData, { searchFields: ['name', 'email', 'department'] }))
+		const { result } = renderHook(() => useSearch(testData, { searchFields: ['title', 'author', 'content'] }))
 
-		// Search for a domain pattern
+		// Search for 'forest' which should match content
 		act(() => {
-			result.current.handleSearch('.com')
+			result.current.handleSearch('forest')
 		})
 
 		expect(result.current.searchResult.length).toBeGreaterThan(0)
 		// Verify results contain the search term in one of the fields
-		for (const user of result.current.searchResult) {
-			const matchesName = user.name.toLowerCase().includes('.com')
-			const matchesEmail = user.email.toLowerCase().includes('.com')
-			const matchesDepartment = user.department.toLowerCase().includes('.com')
-			expect(matchesName || matchesEmail || matchesDepartment).toBe(true)
+		for (const post of result.current.searchResult) {
+			const matchesTitle = post.title.toLowerCase().includes('forest')
+			const matchesAuthor = post.author.toLowerCase().includes('forest')
+			const matchesContent = post.content.toLowerCase().includes('forest')
+			expect(matchesTitle || matchesAuthor || matchesContent).toBe(true)
 		}
 	})
 
 	it('should be case insensitive', () => {
-		const { result } = renderHook(() => useSearch(testData, { searchFields: ['role'] }))
+		const { result } = renderHook(() => useSearch(testData, { searchFields: ['author'] }))
 
 		act(() => {
-			result.current.handleSearch('ADMIN')
+			result.current.handleSearch('TOLKIEN')
 		})
 
-		const adminResults = result.current.searchResult
+		const tolkienResults = result.current.searchResult
 
 		act(() => {
-			result.current.handleSearch('admin')
+			result.current.handleSearch('tolkien')
 		})
 
-		const lowerAdminResults = result.current.searchResult
+		const lowerTolkienResults = result.current.searchResult
 
-		expect(adminResults).toEqual(lowerAdminResults)
-		for (const user of adminResults) {
-			expect(user.role.toLowerCase()).toContain('admin')
+		expect(tolkienResults).toEqual(lowerTolkienResults)
+		for (const post of tolkienResults) {
+			expect(post.author.toLowerCase()).toContain('tolkien')
 		}
 	})
 
 	it('should trim whitespace from search term', () => {
-		const { result } = renderHook(() => useSearch(testData, { searchFields: ['role'] }))
+		const { result } = renderHook(() => useSearch(testData, { searchFields: ['title'] }))
 
 		act(() => {
-			result.current.handleSearch('  user  ')
+			result.current.handleSearch('  adventures  ')
 		})
 
 		expect(result.current.searchResult.length).toBeGreaterThanOrEqual(0)
-		for (const user of result.current.searchResult) {
-			expect(user.role.toLowerCase()).toContain('user')
+		for (const post of result.current.searchResult) {
+			expect(post.title.toLowerCase()).toContain('adventures')
 		}
 	})
 
 	it('should return empty array when no matches found', () => {
-		const { result } = renderHook(() => useSearch(testData, { searchFields: ['name'] }))
+		const { result } = renderHook(() => useSearch(testData, { searchFields: ['title'] }))
 
 		act(() => {
 			result.current.handleSearch('xyznonexistent123')
@@ -114,10 +121,10 @@ describe('useSearch', () => {
 	})
 
 	it('should return all data when search term is cleared', () => {
-		const { result } = renderHook(() => useSearch(testData, { searchFields: ['name'] }))
+		const { result } = renderHook(() => useSearch(testData, { searchFields: ['title'] }))
 
 		act(() => {
-			result.current.handleSearch('admin')
+			result.current.handleSearch('adventures')
 		})
 
 		const filteredCount = result.current.searchResult.length
@@ -132,7 +139,7 @@ describe('useSearch', () => {
 	})
 
 	it('should handle empty data array', () => {
-		const { result } = renderHook(() => useSearch([], { searchFields: ['name'] }))
+		const { result } = renderHook(() => useSearch([], { searchFields: ['title'] }))
 
 		act(() => {
 			result.current.handleSearch('anything')
@@ -144,53 +151,53 @@ describe('useSearch', () => {
 	it('should ignore non-string field values', () => {
 		const dataWithNumbers = Array.from({ length: 5 }, (_, index) => ({
 			id: index + 1,
-			name: faker.person.fullName(),
-			age: faker.number.int({ min: 18, max: 65 }),
+			title: faker.lorem.sentence(),
+			readTime: faker.number.int({ min: 5, max: 30 }),
 		}))
 
-		const { result } = renderHook(() => useSearch(dataWithNumbers, { searchFields: ['name', 'age'] }))
+		const { result } = renderHook(() => useSearch(dataWithNumbers, { searchFields: ['title', 'readTime'] }))
 
 		act(() => {
-			result.current.handleSearch('25')
+			result.current.handleSearch('15')
 		})
 
-		// Should not match numeric age field, only string fields
+		// Should not match numeric readTime field, only string fields
 		expect(result.current.searchResult).toEqual([])
 	})
 
-	it('should handle department-based search with realistic data', () => {
-		const { result } = renderHook(() => useSearch(testData, { searchFields: ['department'] }))
+	it('should handle author-based search with realistic data', () => {
+		const { result } = renderHook(() => useSearch(testData, { searchFields: ['author'] }))
 
 		act(() => {
-			result.current.handleSearch('books')
+			result.current.handleSearch('tolkien')
 		})
 
-		for (const user of result.current.searchResult) {
-			expect(user.department.toLowerCase()).toContain('books')
+		for (const post of result.current.searchResult) {
+			expect(post.author.toLowerCase()).toContain('tolkien')
 		}
 	})
 
-	it('should search across email domains', () => {
-		const { result } = renderHook(() => useSearch(testData, { searchFields: ['email'] }))
+	it('should search across blog content', () => {
+		const { result } = renderHook(() => useSearch(testData, { searchFields: ['content'] }))
 
 		act(() => {
-			result.current.handleSearch('@')
+			result.current.handleSearch('forest')
 		})
 
-		// All emails should contain '@'
-		expect(result.current.searchResult).toHaveLength(50)
-		for (const user of result.current.searchResult) {
-			expect(user.email).toContain('@')
+		// Should find the Tom Bombabil post that mentions Old Forest
+		expect(result.current.searchResult.length).toBeGreaterThan(0)
+		for (const post of result.current.searchResult) {
+			expect(post.content.toLowerCase()).toContain('forest')
 		}
 	})
 
 	it('should update search results when data changes', () => {
-		const { result, rerender } = renderHook(({ data }) => useSearch(data, { searchFields: ['name'] }), {
+		const { result, rerender } = renderHook(({ data }) => useSearch(data, { searchFields: ['title'] }), {
 			initialProps: { data: testData.slice(0, 10) },
 		})
 
 		act(() => {
-			result.current.handleSearch('e')
+			result.current.handleSearch('the')
 		})
 
 		const initialResultCount = result.current.searchResult.length
@@ -199,5 +206,18 @@ describe('useSearch', () => {
 
 		// Should have more results with larger dataset
 		expect(result.current.searchResult.length).toBeGreaterThanOrEqual(initialResultCount)
+	})
+
+	it('should find Tom Bombabil adventures post', () => {
+		const { result } = renderHook(() => useSearch(testData, { searchFields: ['title'] }))
+
+		act(() => {
+			result.current.handleSearch('Tom Bombabil adventures')
+		})
+
+		expect(result.current.searchResult.length).toBe(1)
+		expect(result.current.searchResult[0].title).toBe('Tom Bombabil adventures in the Old Forest')
+		expect(result.current.searchResult[0].author).toBe('J.R.R. Tolkien')
+		expect(result.current.searchResult[0].content).toContain('Tom Bombadil')
 	})
 })
