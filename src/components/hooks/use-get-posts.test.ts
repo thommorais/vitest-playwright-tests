@@ -101,9 +101,9 @@ describe('usePosts', () => {
 		renderHook(() => usePosts())
 
 		expect(mockUseSWR).toHaveBeenCalledWith('posts', expect.any(Function), {
+			keepPreviousData: true,
 			revalidateOnReconnect: true,
 			revalidateOnFocus: true,
-			refreshInterval: 5000,
 		})
 	})
 

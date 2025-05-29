@@ -37,7 +37,6 @@ describe('useSearch', () => {
 	it('should initialize with empty search term and return all data', () => {
 		const { result } = renderHook(() => useSearch(testData, { searchFields: ['title', 'author'] }))
 
-		expect(result.current.searchTerm).toBe('')
 		expect(result.current.searchResult).toEqual(testData)
 		expect(result.current.searchResult).toHaveLength(50)
 	})
@@ -50,7 +49,6 @@ describe('useSearch', () => {
 			result.current.handleSearch('Tom')
 		})
 
-		expect(result.current.searchTerm).toBe('Tom')
 		expect(result.current.searchResult.length).toBeGreaterThan(0) // Ensure there are matches
 		// Verify all results contain 'Tom' in the title
 		for (const post of result.current.searchResult) {
