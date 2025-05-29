@@ -1,3 +1,4 @@
+import { createSearcher } from '_/lib/fuzzy-search'
 import { useCallback, useDeferredValue, useMemo, useState } from 'react'
 
 type SearchableItem = {
@@ -21,32 +22,38 @@ const useSearch = <T extends SearchableItem>(data: T[], options: UseSearchOption
 		setSearchTerm(term)
 	}, [])
 
-	const deferredSearchTerm = useDeferredValue(searchTerm)
+	const fuzySearch = useMemo(() => {
+		return createSearcher<T>(data, {
+			getValue: post => {
+				const str = options.searchFields
+					.map(field => post[field])
+					.join(' ')
+					.toLowerCase()
+					.trim()
+				return str
+			},
+			threshold: 0.6,
+		})
+	}, [data, options.searchFields])
 
 	const searchResult = useMemo(() => {
 		if (!data.length) {
 			return []
 		}
-
-		const searcjTerm = deferredSearchTerm.toLowerCase().trim()
+		const searcjTerm = searchTerm.toLowerCase().trim()
 
 		if (!searcjTerm) {
 			return data
 		}
 
-		return data.filter(item =>
-			options.searchFields.some(field => {
-				if (typeof item[field] !== 'string') {
-					return false
-				}
-				return item[field].toLowerCase().includes(searcjTerm)
-			}),
-		)
-	}, [data, deferredSearchTerm, options.searchFields])
+		return fuzySearch.search(searcjTerm)
+	}, [fuzySearch, data, searchTerm])
+
+	const deferredSearchResults = useDeferredValue(searchResult) as T[]
 
 	return {
 		searchTerm,
-		searchResult,
+		searchResult: deferredSearchResults,
 		handleSearch,
 	}
 }
