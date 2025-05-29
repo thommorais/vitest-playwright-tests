@@ -1,0 +1,8 @@
+-P ubuntu-latest=node:20
+-P ubuntu-22.04=node:20
+-P ubuntu-20.04=node:20
+--container-architecture linux/amd64
+--bind
+-s CODECOV_TOKEN=
+--container-daemon-socket /var/run/docker.sock
+
