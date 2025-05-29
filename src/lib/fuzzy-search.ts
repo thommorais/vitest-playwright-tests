@@ -73,7 +73,7 @@ const calculateMatchScore = (query: string, text: string): number => {
 	return getSimilarity(normalizedQuery, normalizedText)
 }
 
-const search = <T>(query: string, items: readonly T[], options: SearchOptions<T> = {}): readonly T[] => {
+const search = <T>(query: string, items: readonly T[], options: SearchOptions<T> = {}): T[] => {
 	const { threshold = DEFAULT_THRESHOLD, limit, getValue } = options
 
 	if (!query?.trim()) return []
@@ -113,7 +113,7 @@ const searchWithScores = <T>(
 	return limit ? results.slice(0, limit) : results
 }
 
-const createSearcher = <T>(items: readonly T[], options: SearchOptions<T> = {}) => ({
+const createSearcher = <T>(items: T[], options: SearchOptions<T> = {}) => ({
 	search: (query: string) => search(query, items, options),
 	searchWithScores: (query: string) => searchWithScores(query, items, options),
 })
