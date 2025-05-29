@@ -52,24 +52,23 @@ const usePagination = <T>(data: T[], options: UsePaginationOptions = {}): UsePag
 		})
 	}, [])
 
-	const resetToFirstPage = useCallback(() => {
-		setPagination(prev => ({ ...prev, page: DEFAULT_PAGINATION.page }))
-	}, [])
+	const resetToFirstPage = useCallback(() => setPagination(prev => ({ ...prev, page: DEFAULT_PAGINATION.page })), [])
 
-	const goToPage = useCallback((page: number) => {
-		setPagination(prev => ({ ...prev, page }))
-	}, [])
+	const goToPage = useCallback((page: number) => setPagination(prev => ({ ...prev, page })), [])
 
-	const setPerPage = useCallback((perPage: number) => {
-		setPagination({
-			page: DEFAULT_PAGINATION.page,
-			perPage,
-		})
-	}, [])
+	const setPerPage = useCallback(
+		(perPage: number) =>
+			setPagination({
+				page: DEFAULT_PAGINATION.page,
+				perPage,
+			}),
+		[],
+	)
 
-	const paginatedData = useMemo(() => {
-		return paginate(data, pagination.page, pagination.perPage)
-	}, [data, pagination.page, pagination.perPage])
+	const paginatedData = useMemo(
+		() => paginate(data, pagination.page, pagination.perPage),
+		[data, pagination.page, pagination.perPage],
+	)
 
 	const totalItems = data.length
 
