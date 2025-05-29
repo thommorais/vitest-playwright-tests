@@ -7,15 +7,25 @@ export default defineConfig({
 	forbidOnly: !!process.env.CI,
 	retries: process.env.CI ? 2 : 0,
 	workers: process.env.CI ? 1 : undefined,
-	reporter: 'html',
+	reporter: process.env.CI ? 'dot' : [['list', { printSteps: true }]],
+	outputDir: './tests/test-results',
 	use: {
 		baseURL: 'http://localhost:5173',
 		trace: 'on-first-retry',
 	},
 	projects: [
 		{
+			name: 'firefox',
+			use: { ...devices['Desktop Firefox'] },
+		},
+		{
 			name: 'chromium',
 			use: { ...devices['Desktop Chrome'] },
+		},
+		{
+			name: 'webkit',
+			use: { ...devices['Desktop Safari'] },
+			ignoreSnapshots: true,
 		},
 	],
 	webServer: {
