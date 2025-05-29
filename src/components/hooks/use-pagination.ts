@@ -26,7 +26,9 @@ const DEFAULT_PAGINATION = {
 } as const
 
 const paginate = <T>(array: T[], page: number, pageSize: number): T[] => {
-	return [...array].slice((page - 1) * pageSize, page * pageSize)
+	const start = (page - 1) * pageSize
+	const end = start + pageSize
+	return array.slice(start, end)
 }
 
 const usePagination = <T>(data: T[], options: UsePaginationOptions = {}): UsePaginationReturn<T> => {
