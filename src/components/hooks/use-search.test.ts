@@ -44,7 +44,7 @@ describe('useSearch', () => {
 		})
 
 		expect(result.current.searchTerm).toBe('John')
-		expect(result.current.searchResult.length).toBeGreaterThanOrEqual(0)
+		expect(result.current.searchResult.length).toBeGreaterThan(0) // Ensure there are matches
 		// Verify all results contain 'John' in the name
 		for (const user of result.current.searchResult) {
 			expect(user.name.toLowerCase()).toContain('john')
